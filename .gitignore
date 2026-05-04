@@ -1,0 +1,16 @@
+# LTE Sonda
+*.html
+!lte_sonda_report.html
+*.BACKUP.html
+
+# Node
+node_modules/
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
