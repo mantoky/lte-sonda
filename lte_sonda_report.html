@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>⚡ LTE Sonda — Relatórios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+import { getDatabase, ref, set, push, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDpxZgoYXz4lFfsJfU30pSgA3no7U29s2I",
+  authDomain: "reportlte-c5109.firebaseapp.com",
+  databaseURL: "https://reportlte-c5109-default-rtdb.firebaseio.com",
+  projectId: "reportlte-c5109",
+  storageBucket: "reportlte-c5109.firebasestorage.app",
+  messagingSenderId: "130839880467",
+  appId: "1:130839880467:web:a7178166dc4124cfca70e6",
+  measurementId: "G-WYX2CG3QPR"
+};
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getDatabase(app);
+
+window.firebaseDB = { ref, set, push, onValue, get, db };
+window.firebaseApp = app;
+</script>
+
+<style>
+/* ============================================================
+   DESIGN TOKENS & BASE
+============================================================ */
+:root {
+  --bg:       #05090f;
+  --bg2:      #0b1422;
+  --bg3:      #101d35;
+  --card:     rgba(11,20,34,0.92);
+  --glass:    rgba(15,25,50,0.85);
+  --accent:   #00c6ff;
+  --accent2:  #0065ff;
+  --gold:     #f0a500;
+  --success:  #00e676;
+  --danger:   #ff1744;
+  --warn:     #ffab00;
+  --text:     #e2f0ff;
+  --dim:      #6888a8;
+  --border:   rgba(0,198,255,0.18);
+  --border2:  rgba(0,198,255,0.08);
+
+  /* Report colors */
+  --rh:   #1a3060;
+  --rb:   #2a5298;
+  --rl:   #c0d8f0;
+  --rr:   #cee0f5;
+  --ra:   #dceeff;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Exo 2', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient grid */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,198,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,198,255,0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Ambient glow top-left */
+body::after {
+  content: '';
+  position: fixed; top: -20%; left: -10%; width: 60%; height: 60%; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse, rgba(0,100,255,0.08) 0%, transparent 65%);
+}
+
+.page { display: none; min-height: 100vh; position: relative; z-index: 1; flex-direction: column; }
+.page.active { display: flex; }
+
+/* ============================================================
+   TYPOGRAPHY & UTILS
+============================================================ */
+h1,h2,h3,h4 { line-height: 1.2; }
+
+.gradient-text {
+  background: linear-gradient(120deg, var(--accent) 0%, #fff 60%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+.sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0; }
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 22px; border-radius: 10px; border: none;
+  font-family: 'Exo 2', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.25s; text-decoration: none;
+  white-space: nowrap; user-select: none;
+}
+.btn:active { transform: scale(0.97) !important; }
+.btn i { font-size: 13px; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(0,101,255,0.35);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,101,255,0.55); }
+
+.btn-secondary {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-secondary:hover { background: rgba(0,198,255,0.1); border-color: var(--accent); color: var(--accent); }
+
+.btn-success {
+  background: linear-gradient(135deg, #008f45, var(--success));
+  color: #001a0a; font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0,230,118,0.3);
+}
+.btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,230,118,0.5); }
+
+.btn-gold {
+  background: linear-gradient(135deg, #b36a00, var(--gold));
+  color: #1a0800; font-weight: 700;
+  box-shadow: 0 4px 16px rgba(240,165,0,0.25);
+}
+.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(240,165,0,0.45); }
+
+.btn-danger {
+  background: linear-gradient(135deg, #a0001c, var(--danger));
+  color: #fff;
+}
+.btn-danger:hover { transform: translateY(-2px); }
+
+.btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
+.btn-icon { padding: 8px 12px; }
+.btn-full { width: 100%; justify-content: center; }
+
+.del-btn {
+  background: rgba(255,23,68,0.08);
+  border: 1px solid rgba(255,23,68,0.25);
+  color: var(--danger);
+  border-radius: 8px; padding: 6px 11px;
+  cursor: pointer; font-size: 13px; transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.del-btn:hover { background: rgba(255,23,68,0.18); }
+
+/* ============================================================
+   TAGS & BADGES
+============================================================ */
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.tag-admin { background: rgba(240,165,0,0.15); color: var(--gold); border: 1px solid rgba(240,165,0,0.3); }
+.tag-user  { background: rgba(0,198,255,0.1);  color: var(--accent); border: 1px solid rgba(0,198,255,0.25); }
+
+/* ============================================================
+   FORM FIELDS
+============================================================ */
+.fgroup { display: flex; flex-direction: column; gap: 6px; }
+.fgroup label {
+  font-size: 11px; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.fgroup input, .fgroup select, .fgroup textarea {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 9px; padding: 11px 14px;
+  color: var(--text); font-family: 'Exo 2', sans-serif; font-size: 14px;
+  transition: all 0.25s; outline: none; width: 100%;
+}
+.fgroup input:focus, .fgroup select:focus, .fgroup textarea:focus {
+  border-color: var(--accent); background: rgba(0,198,255,0.05);
+  box-shadow: 0 0 0 3px rgba(0,198,255,0.08);
+}
+.fgroup select option { background: var(--bg2); color: var(--text); }
+
+/* ============================================================
+   CARDS
+============================================================ */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 18px; padding: 22px 24px;
+  backdrop-filter: blur(14px);
+  transition: border-color 0.3s;
+}
+.card:hover { border-color: var(--border); }
+
+.card-title {
+  font-size: 13px; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 2px;
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ============================================================
+   TOPBAR
+============================================================ */
+.topbar {
+  background: rgba(11,20,34,0.95);
+  border-bottom: 1px solid var(--border2);
+  padding: 0 22px; height: 62px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 90;
+  backdrop-filter: blur(16px);
+  gap: 12px;
+}
+
+.topbar-brand { display: flex; align-items: center; gap: 11px; flex-shrink: 0; }
+.topbar-brand .logo-box {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 19px; box-shadow: 0 0 18px rgba(0,198,255,0.3);
+}
+.topbar-brand .brand-name {
+  font-size: 17px; font-weight: 700;
+  background: linear-gradient(120deg, var(--accent), #fff);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.topbar-brand .brand-sub {
+  font-size: 10px; color: var(--dim);
+  font-family: 'JetBrains Mono', monospace; display: block;
+  line-height: 1;
+}
+
+.topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.user-pill {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 100px; padding: 5px 14px 5px 6px;
+}
+.user-pill .ava {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.user-pill .ava-name { font-size: 13px; font-weight: 600; }
+.user-pill .ava-role { font-size: 10px; color: var(--dim); display: block; }
+
+/* ============================================================
+   LOGIN PAGE
+============================================================ */
+#page-login {
+  align-items: center; justify-content: center; min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,100,255,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 90%, rgba(0,198,255,0.08) 0%, transparent 45%);
+}
+
+.login-wrap {
+  width: min(430px, 94vw);
+  animation: fadeUp 0.55s cubic-bezier(.22,.68,0,1.2);
+}
+
+.login-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px; padding: 44px 38px;
+  box-shadow: 0 0 80px rgba(0,100,255,0.12), 0 40px 80px rgba(0,0,0,0.6);
+  backdrop-filter: blur(20px);
+}
+
+.login-logo {
+  text-align: center; margin-bottom: 34px;
+}
+.login-logo .logo-icon {
+  width: 76px; height: 76px; margin: 0 auto 14px;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  border-radius: 22px; display: flex; align-items: center; justify-content: center;
+  font-size: 36px; box-shadow: 0 0 36px rgba(0,198,255,0.45);
+}
+.login-logo h1 { font-size: 22px; font-weight: 800; }
+.login-logo h1 span { -webkit-text-fill-color: transparent; }
+.login-logo p { font-size: 11px; color: var(--dim); margin-top: 4px; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+
+.login-footer {
+  margin-top: 20px; padding: 14px 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border2);
+  border-radius: 10px; font-size: 12px; color: var(--dim);
+  text-align: center;
+}
+.login-footer code {
+  background: rgba(0,198,255,0.1); border: 1px solid rgba(0,198,255,0.2);
+  padding: 2px 8px; border-radius: 6px; color: var(--accent); font-family: 'JetBrains Mono', monospace;
+}
+
+.err-msg {
+  background: rgba(255,23,68,0.1); border: 1px solid rgba(255,23,68,0.25);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; color: var(--danger);
+  display: none; margin-top: 12px; text-align: center;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   DASHBOARD
+============================================================ */
+.container { max-width: 1180px; margin: 0 auto; padding: 26px 22px; }
+
+.section-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 22px;
+}
+.section-hdr h2 { font-size: 22px; font-weight: 800; }
+.section-hdr h3 { font-size: 15px; font-weight: 600; color: var(--dim); }
+
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px; margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 16px; padding: 18px 20px;
+  transition: all 0.3s; cursor: default;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.stat-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,198,255,0.08); }
+.stat-card .s-icon { font-size: 22px; color: var(--accent); margin-bottom: 4px; }
+.stat-card .s-val { font-size: 34px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+.stat-card .s-lbl { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+
+.search-box {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: 9px; padding: 9px 14px; color: var(--text);
+  font-family: 'Exo 2', sans-serif; font-size: 14px; outline: none; width: 220px;
+  transition: all 0.25s;
+}
+.search-box:focus { border-color: var(--accent); width: 280px; }
+
+.reports-list { display: flex; flex-direction: column; gap: 12px; }
+
+.rpt-card {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 18px 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; cursor: pointer; transition: all 0.25s; flex-wrap: wrap;
+}
+.rpt-card:hover { border-color: var(--accent); transform: translateX(5px); box-shadow: 0 0 24px rgba(0,198,255,0.08); }
+
+.rpt-title { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+.rpt-meta { font-size: 12px; color: var(--dim); font-family: 'JetBrains Mono', monospace; display: flex; flex-wrap: wrap; gap: 8px; }
+.rpt-meta span::before { content: '·'; margin-right: 8px; color: var(--border); }
+.rpt-meta span:first-child::before { content: ''; margin: 0; }
+.rpt-actions { display: flex; gap: 7px; flex-shrink: 0; }
+
+.empty-state {
+  text-align: center; padding: 52px 20px; color: var(--dim);
+  background: var(--card); border: 1px dashed var(--border); border-radius: 14px;
+}
+.empty-state i { font-size: 44px; display: block; margin-bottom: 14px; color: var(--border); }
+.empty-state p { font-size: 15px; }
+
+/* ============================================================
+   EDITOR
+============================================================ */
+.editor-grid { display: flex; flex-direction: column; gap: 18px; padding: 22px; }
+
+.field-row {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+/* Orders table */
+.ord-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ord-table th {
+  background: rgba(0,198,255,0.08);
+  padding: 9px 12px; text-align: left;
+  font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+}
+.ord-table td { padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+.ord-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+.ord-table input, .ord-table select {
+  background: transparent; border: 1px solid transparent;
+  border-radius: 6px; padding: 6px 10px; color: var(--text);
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 100%; outline: none; transition: all 0.2s;
+}
+.ord-table input:focus, .ord-table select:focus { border-color: var(--accent); background: rgba(0,198,255,0.05); }
+.ord-table select option { background: var(--bg2); }
+
+/* Numbered list inputs */
+.num-list { display: flex; flex-direction: column; gap: 7px; }
+.num-item { display: flex; align-items: center; gap: 9px; }
+.num-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--accent); min-width: 22px; text-align: right; flex-shrink: 0;
+}
+.num-item input {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border2);
+  border-radius: 7px; padding: 8px 12px; color: var(--text);
+  font-family: 'Exo 2', sans-serif; font-size: 13px; outline: none; transition: all 0.2s;
+}
+.num-item input:focus { border-color: var(--accent); background: rgba(0,198,255,0.05); }
+
+/* Import zone */
+.drop-zone {
+  border: 2px dashed var(--border); border-radius: 12px; padding: 28px;
+  text-align: center; cursor: pointer; transition: all 0.25s; background: rgba(255,255,255,0.015);
+}
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(0,198,255,0.04); }
+.drop-zone i { font-size: 30px; color: var(--accent); display: block; margin-bottom: 10px; }
+.drop-zone p { font-size: 13px; color: var(--dim); }
+.drop-zone strong { color: var(--text); }
+
+/* Three-col layout */
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+.two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+/* ============================================================
+   PREVIEW / REPORT (matches image)
+============================================================ */
+#preview-wrap { padding: 20px; display: flex; justify-content: center; overflow: auto; }
+
+/* Export toolbar */
+.exp-bar {
+  display: flex; gap: 8px; padding: 14px 20px;
+  background: rgba(11,20,34,0.96); border-bottom: 1px solid var(--border2);
+  flex-wrap: wrap; align-items: center;
+  backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 50;
+}
+.exp-bar .bar-title { font-weight: 700; font-size: 16px; margin-right: auto; }
+.exp-sep { width: 1px; height: 28px; background: var(--border); margin: 0 4px; }
+
+/* THE REPORT ITSELF */
+.report-doc {
+  background: #fff;
+  width: 100%; max-width: 980px;
+  border-radius: 6px; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111;
+}
+
+.report-doc * { box-sizing: border-box; }
+
+/* HEADER ROW */
+.rdoc-hdr {
+  background: #1a3060; color: #fff;
+  display: grid; grid-template-columns: 60% 40%;
+}
+.rdoc-hdr-l, .rdoc-hdr-r {
+  padding: 11px 18px; text-align: center;
+  font-size: 15px; font-weight: 700; font-family: Arial, sans-serif;
+}
+.rdoc-hdr-l { border-right: 2px solid rgba(255,255,255,0.2); }
+
+/* BODY THREE-COL */
+.rdoc-body {
+  display: grid; grid-template-columns: 40% 33% 27%;
+  background: #c0d8f0; min-height: 400px;
+}
+.rdoc-col { padding: 10px 12px; }
+.rdoc-col + .rdoc-col { border-left: 2px solid #4a7cc7; }
+
+/* Info box (top-left) */
+.rinfo-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-bottom: 8px; font-size: 12px;
+}
+.rinfo-row { display: flex; gap: 3px; padding: 2px 0; }
+.rinfo-lbl { font-weight: 700; color: #1a3060; white-space: nowrap; }
+.rinfo-val { color: #cc0000; }
+
+/* Vehicles */
+.rveh { font-size: 12px; margin-bottom: 8px; }
+.rveh-lbl { font-weight: 700; color: #1a3060; margin-bottom: 3px; }
+.rveh-val { color: #cc0000; }
+
+/* Section title bar */
+.rsec {
+  background: #2a5298; color: #fff;
+  text-align: center; padding: 5px 8px;
+  font-size: 12px; font-weight: 700; border-radius: 2px;
+  margin-bottom: 4px; margin-top: 8px;
+}
+.rsec:first-child { margin-top: 0; }
+
+/* PCM table */
+.rpcm { width: 100%; border-collapse: collapse; font-size: 11px; }
+.rpcm tr:nth-child(odd)  { background: #cee0f5; }
+.rpcm tr:nth-child(even) { background: #dceeff; }
+.rpcm td { padding: 4px 7px; border: 1px solid rgba(74,124,199,0.25); }
+.rpcm .t-ord { color: #cc0000; font-weight: 600; font-family: 'Courier New', monospace; white-space: nowrap; }
+.rpcm .t-sta { color: #1a3060; }
+
+/* Numbered list */
+.rlist { list-style: none; font-size: 11.5px; }
+.rlist li { display: flex; gap: 4px; min-height: 20px; border-bottom: 1px solid rgba(74,124,199,0.18); padding: 2px 0; }
+.rlist li .rn { color: #1a3060; font-weight: 700; min-width: 16px; text-align: right; flex-shrink: 0; }
+.rlist li .rv { color: #cc0000; text-decoration: underline; }
+
+/* Footer */
+.rdoc-ftr {
+  background: #1a3060; color: rgba(255,255,255,0.55);
+  font-size: 10px; padding: 6px 16px;
+  display: flex; justify-content: space-between;
+  font-family: Arial, sans-serif;
+}
+
+/* ============================================================
+   ADMIN PAGE
+============================================================ */
+.tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; }
+.tab-btn {
+  flex: 1; padding: 10px 12px; text-align: center; border-radius: 9px;
+  cursor: pointer; font-size: 13px; transition: all 0.25s; color: var(--dim);
+  border: none; background: transparent; font-family: 'Exo 2', sans-serif; font-weight: 600;
+}
+.tab-btn.active { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.user-row {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 13px; padding: 15px 20px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  transition: border-color 0.25s;
+}
+.user-row:hover { border-color: var(--border); }
+.u-ava {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 800; color: #fff;
+}
+.u-info { flex: 1; min-width: 0; }
+.u-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.u-email { font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
+.u-actions { display: flex; gap: 7px; margin-left: auto; }
+
+/* ============================================================
+   MODAL
+============================================================ */
+.modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82); backdrop-filter: blur(6px);
+  z-index: 500; align-items: center; justify-content: center;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 22px; padding: 32px 30px;
+  width: min(470px, 92vw); animation: popIn 0.28s ease;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+}
+.modal h3 { font-size: 19px; font-weight: 800; margin-bottom: 20px; }
+.modal .mbtns { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
+@keyframes popIn { from { opacity:0; transform:scale(.92); } to { opacity:1; transform:scale(1); } }
+
+/* ============================================================
+   TOAST
+============================================================ */
+.toast-wrap { position: fixed; top: 74px; right: 18px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  background: var(--card); backdrop-filter: blur(16px);
+  border: 1px solid var(--border); border-left: 4px solid var(--accent);
+  border-radius: 10px; padding: 13px 18px; font-size: 14px;
+  min-width: 240px; max-width: 340px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  animation: toastIn 0.3s ease; cursor: pointer;
+}
+.toast.s { border-left-color: var(--success); }
+.toast.e { border-left-color: var(--danger); }
+.toast.w { border-left-color: var(--warn); }
+@keyframes toastIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+/* ============================================================
+   LOADER
+============================================================ */
+.loader {
+  display: none; position: fixed; inset: 0;
+  background: rgba(5,9,15,0.88); z-index: 9000;
+  align-items: center; justify-content: center; flex-direction: column; gap: 18px;
+}
+.loader.on { display: flex; }
+.loader-ring {
+  width: 56px; height: 56px;
+  border: 3px solid rgba(0,198,255,0.15); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader p { font-size: 13px; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 800px) {
+  .three-col { grid-template-columns: 1fr 1fr; }
+  .rdoc-body { grid-template-columns: 1fr; }
+  .rdoc-col + .rdoc-col { border-left: none; border-top: 2px solid #4a7cc7; }
+  .rdoc-hdr { grid-template-columns: 1fr; }
+  .rdoc-hdr-l { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.2); }
+}
+@media (max-width: 600px) {
+  .three-col { grid-template-columns: 1fr; }
+  .two-col   { grid-template-columns: 1fr; }
+  .topbar-brand .brand-name { font-size: 14px; }
+  .brand-sub { display: none; }
+  .search-box:focus { width: 220px; }
+}
+
+/* PRINT */
+@media print {
+  body > *:not(#page-preview) { display: none !important; }
+  #page-preview { display: flex !important; }
+  .exp-bar { display: none !important; }
+  .report-doc { box-shadow: none !important; }
+  body::before, body::after { display: none !important; }
+  body { background: #fff !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     LOGIN PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-login" class="page">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon">⚡</div>
+        <h1 class="gradient-text">LTE Sonda Report</h1>
+        <p>SISTEMA DE RELATÓRIOS PCM — VALE SONDA</p>
+      </div>
+
+      <div class="fgroup" style="margin-bottom:16px;">
+        <label><i class="fa fa-user-circle"></i> Usuário</label>
+        <select id="lg-user">
+          <option value="">Selecione seu nome...</option>
+        </select>
+      </div>
+
+      <div class="fgroup" style="margin-bottom:20px;">
+        <label><i class="fa fa-lock"></i> Senha</label>
+        <input type="password" id="lg-pass" placeholder="Digite sua senha" autocomplete="current-password">
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="doLogin()">
+        <i class="fa fa-sign-in-alt"></i> Entrar no Sistema
+      </button>
+
+      <div class="err-msg" id="lg-err">❌ Usuário ou senha inválidos</div>
+    </div>
+
+    <div class="login-footer">
+      Senha padrão: <code>Vale@2026</code> &nbsp;·&nbsp; Contato: Administrador
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     DASHBOARD PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-dashboard" class="page">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="logo-box">⚡</div>
+      <div>
+        <div class="brand-name">LTE Sonda Report</div>
+        <span class="brand-sub">VALE — Sistema de Relatórios</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="showPage('page-agenda')">
+        <i class="fa fa-calendar"></i> Agenda
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="showPage('page-escalas')">
+        <i class="fa fa-users"></i> Escalas
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="showPage('page-ausencias')">
+        <i class="fa fa-umbrella-beach"></i> Ausências
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="showPage('page-uploads')">
+        <i class="fa fa-upload"></i> Uploads
+      </button>
+      <button class="btn btn-secondary btn-sm" id="btn-admin-dash" onclick="showPage('page-admin')" style="display:none">
+        <i class="fa fa-cog"></i> Admin
+      </button>
+      <div class="user-pill">
+        <div class="ava" id="d-ava">?</div>
+        <div>
+          <div class="ava-name" id="d-name">–</div>
+          <span class="ava-role" id="d-role">–</span>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm btn-icon" onclick="doLogout()" title="Sair">
+        <i class="fa fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section-hdr" style="margin-top:10px;">
+      <div>
+        <h2 class="gradient-text"><i class="fa fa-chart-bar"></i> Painel</h2>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="newReport()">
+          <i class="fa fa-plus"></i> Novo Relatório
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <div class="section-hdr">
+      <h3><i class="fa fa-file-alt" style="color:var(--accent);margin-right:6px;"></i> Meus Relatórios</h3>
+      <input class="search-box" type="text" id="search-box" placeholder="🔍 Buscar relatório..." oninput="renderReports()">
+    </div>
+
+    <div class="reports-list" id="reports-list"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     EDITOR PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-editor" class="page">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="logo-box">✏️</div>
+      <div>
+        <div class="brand-name">Editor de Relatório</div>
+        <span class="brand-sub" id="editor-sub">Novo</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="showPage('page-dashboard')">
+        <i class="fa fa-arrow-left"></i> Voltar
+      </button>
+      <button class="btn btn-success btn-sm" onclick="saveReport()">
+        <i class="fa fa-save"></i> Salvar
+      </button>
+      <button class="btn btn-gold btn-sm" onclick="previewReport()">
+        <i class="fa fa-eye"></i> Visualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="editor-grid" style="max-width:920px; margin:0 auto; width:100%;">
+
+    <!-- INFO BÁSICA -->
+    <div class="card" style="margin-top:6px;">
+      <div class="card-title"><i class="fa fa-info-circle"></i> Informações da Equipe</div>
+      <div class="field-row" style="grid-template-columns: repeat(auto-fit, minmax(160px,1fr));">
+        <div class="fgroup">
+          <label>Equipe / Nomes</label>
+          <input id="f-equipe" type="text" placeholder="Ex: Robson e Leno">
+        </div>
+        <div class="fgroup">
+          <label>Turma</label>
+          <input id="f-turma" type="text" placeholder="Ex: C">
+        </div>
+        <div class="fgroup">
+          <label>Dia (turno)</label>
+          <input id="f-dia" type="text" placeholder="Ex: 1-3">
+        </div>
+        <div class="fgroup">
+          <label>Data</label>
+          <input id="f-data" type="date">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="card-title"><i class="fa fa-truck"></i> Checklist de Veículos</div>
+      <div class="field-row" style="grid-template-columns: repeat(auto-fit, minmax(130px,1fr));">
+        <div class="fgroup"><label>Veículo 1</label><input id="v0" type="text" placeholder="TN04"></div>
+        <div class="fgroup"><label>Veículo 2</label><input id="v1" type="text" placeholder="TN03"></div>
+        <div class="fgroup"><label>Veículo 3</label><input id="v2" type="text" placeholder="TN31"></div>
+        <div class="fgroup"><label>Veículo 4</label><input id="v3" type="text" placeholder="(opcional)"></div>
+      </div>
+    </div>
+
+    <!-- PCM ORDENS -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <span><i class="fa fa-list-ol"></i> Programação PCM (Ordens)</span>
+        <div class="btn-row">
+          <button class="btn btn-secondary btn-sm" onclick="addOrderRow()">
+            <i class="fa fa-plus"></i> Linha
+          </button>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+            <i class="fa fa-file-excel"></i> Importar Excel
+            <input type="file" id="xl-file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
+          </label>
+        </div>
+      </div>
+
+      <div class="drop-zone" id="drop-zone"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleFileDrop(event)">
+        <i class="fa fa-cloud-upload-alt"></i>
+        <p><strong>Arraste o arquivo da programação PCM aqui</strong></p>
+        <p>ou clique em "Importar Excel" acima — formato .xlsx</p>
+      </div>
+
+      <div style="margin-top:14px; overflow-x:auto;">
+        <table class="ord-table" id="ord-table">
+          <thead>
+            <tr>
+              <th style="width:36px;">#</th>
+              <th style="min-width:155px;">Nº da Ordem</th>
+              <th>Status / Ocorrência</th>
+              <th style="width:38px;"></th>
+            </tr>
+          </thead>
+          <tbody id="ord-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- OUTRAS ATIVIDADES + REDEL -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title"><i class="fa fa-tasks"></i> Outras Atividades</div>
+        <div class="num-list" id="out-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="fa fa-bolt"></i> REDEL</div>
+        <div class="num-list" id="redel-list"></div>
+      </div>
+    </div>
+
+    <!-- STATUS MW/LTE -->
+    <div class="card">
+      <div class="card-title"><i class="fa fa-broadcast-tower"></i> Status MW / LTE</div>
+      <div class="three-col">
+        <div>
+          <p style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">📡 Rádios MW</p>
+          <div class="num-list" id="mw-list"></div>
+        </div>
+        <div>
+          <p style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">📶 Rede LTE</p>
+          <div class="num-list" id="lte-list"></div>
+        </div>
+        <div>
+          <p style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">🌤️ Clima / Tempo</p>
+          <div class="num-list" id="clima-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OBSERVAÇÕES -->
+    <div class="card" style="margin-bottom:32px;">
+      <div class="card-title"><i class="fa fa-comment-dots"></i> Observações Gerais</div>
+      <div class="fgroup">
+        <textarea id="f-obs" rows="4" placeholder="Observações adicionais do relatório..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     PREVIEW / EXPORT PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-preview" class="page">
+  <div class="exp-bar">
+    <button class="btn btn-secondary btn-sm" onclick="showPage('page-editor')">
+      <i class="fa fa-arrow-left"></i> Editar
+    </button>
+    <div class="exp-sep"></div>
+    <button class="btn btn-danger btn-sm" onclick="xPDF()">
+      <i class="fa fa-file-pdf"></i> PDF
+    </button>
+    <button class="btn btn-success btn-sm" onclick="xImage()">
+      <i class="fa fa-image"></i> Imagem
+    </button>
+    <button class="btn btn-secondary btn-sm" onclick="xText()">
+      <i class="fa fa-align-left"></i> Texto
+    </button>
+    <button class="btn btn-gold btn-sm" onclick="window.print()">
+      <i class="fa fa-print"></i> Imprimir
+    </button>
+  </div>
+  <div id="preview-wrap">
+    <!-- injected by renderPreview() -->
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     ADMIN PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-admin" class="page">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="logo-box">⚙️</div>
+      <div>
+        <div class="brand-name">Administração</div>
+        <span class="brand-sub">Gestão de usuários e relatórios</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="showPage('page-dashboard')">
+        <i class="fa fa-arrow-left"></i> Dashboard
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div style="margin-top:10px; margin-bottom:18px;">
+      <div class="tabs" id="admin-tabs">
+        <button class="tab-btn active" onclick="showTab('tab-users',this)"><i class="fa fa-users"></i> Usuários</button>
+        <button class="tab-btn" onclick="showTab('tab-allrpts',this)"><i class="fa fa-file-alt"></i> Todos os Relatórios</button>
+        <button class="tab-btn" onclick="showTab('tab-import',this)"><i class="fa fa-file-excel"></i> Importar Usuários</button>
+      </div>
+    </div>
+
+    <!-- Users tab -->
+    <div class="tab-panel active" id="tab-users">
+      <div class="section-hdr">
+        <h2 class="gradient-text">Usuários do Sistema</h2>
+        <button class="btn btn-primary btn-sm" onclick="openAddUser()"><i class="fa fa-user-plus"></i> Adicionar</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="users-list"></div>
+    </div>
+
+    <!-- All reports tab -->
+    <div class="tab-panel" id="tab-allrpts">
+      <div class="section-hdr">
+        <h2 class="gradient-text">Todos os Relatórios</h2>
+      </div>
+      <div class="reports-list" id="admin-rpts"></div>
+    </div>
+
+    <!-- Import users tab -->
+    <div class="tab-panel" id="tab-import">
+      <div class="card" style="max-width:600px;">
+        <div class="card-title"><i class="fa fa-file-excel"></i> Importar Usuários via Excel</div>
+        <p style="color:var(--dim);font-size:13px;margin-bottom:18px;">
+          Importe a planilha no formato: <code class="mono" style="font-size:11px;color:var(--accent);">ID | NOME | EMPRESA | PERFIL | Teams | WhatsApp</code>
+        </p>
+        <label class="drop-zone" style="cursor:pointer;display:block;">
+          <i class="fa fa-cloud-upload-alt"></i>
+          <p><strong>Clique para selecionar a planilha de usuários</strong></p>
+          <p>Formato .xlsx ou .xls</p>
+          <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importUsers(this)">
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     MODAL
+════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<!-- NOVAS PÁGINAS: AGENDA, ESCALAS, AUSENCIAS, UPLOADS -->
+<div id="page-agenda" class="page"><div class="topbar"><div class="topbar-brand"><div class="logo-box"><i class="fa fa-calendar"></i></div><div><div class="brand-name">Agenda</div><span class="brand-sub">Eventos</span></div></div><div class="topbar-right"><button class="btn btn-secondary btn-sm" onclick="showPage('page-dashboard')"><i class="fa fa-arrow-left"></i> Voltar</button><button class="btn btn-primary btn-sm" onclick="openModalAgenda()"><i class="fa fa-plus"></i> Novo</button></div></div><div class="container"><div class="stats-grid" id="agenda-stats"></div><div class="reports-list" id="agenda-list"></div></div></div>
+
+<div id="page-escalas" class="page"><div class="topbar"><div class="topbar-brand"><div class="logo-box"><i class="fa fa-users"></i></div><div><div class="brand-name">Escalas</div><span class="brand-sub">Equipes</span></div></div><div class="topbar-right"><button class="btn btn-secondary btn-sm" onclick="showPage('page-dashboard')"><i class="fa fa-arrow-left"></i> Voltar</button><button class="btn btn-primary btn-sm" onclick="openModalEscala()"><i class="fa fa-plus"></i> Nova</button></div></div><div class="container"><div class="stats-grid" id="escalas-stats"></div><div class="reports-list" id="escalas-list"></div></div></div>
+
+<div id="page-ausencias" class="page"><div class="topbar"><div class="topbar-brand"><div class="logo-box"><i class="fa fa-umbrella-beach"></i></div><div><div class="brand-name">Ausências</div><span class="brand-sub">Férias/Folgas</span></div></div><div class="topbar-right"><button class="btn btn-secondary btn-sm" onclick="showPage('page-dashboard')"><i class="fa fa-arrow-left"></i> Voltar</button><button class="btn btn-primary btn-sm" onclick="openModalAusencia()"><i class="fa fa-plus"></i> Nova</button></div></div><div class="container"><div class="stats-grid" id="ausencias-stats"></div><div class="reports-list" id="ausencias-list"></div></div></div>
+
+<div id="page-uploads" class="page"><div class="topbar"><div class="topbar-brand"><div class="logo-box"><i class="fa fa-upload"></i></div><div><div class="brand-name">Uploads</div><span class="brand-sub">Mídia</span></div></div><div class="topbar-right"><button class="btn btn-secondary btn-sm" onclick="showPage('page-dashboard')"><i class="fa fa-arrow-left"></i> Voltar</button><label class="btn btn-primary btn-sm" style="cursor:pointer;"><i class="fa fa-plus"></i> Upload<input type="file" id="upl-file" accept="image/*" style="display:none" onchange="handleUpload(this)"></label></div></div><div class="container"><div class="stats-grid" id="uploads-stats"></div><div class="reports-list" id="uploads-list"></div></div></div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- LOADER -->
+<div class="loader" id="loader">
+  <div class="loader-ring"></div>
+  <p>Processando...</p>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════════ -->
+<script>
+/* ── CONSTANTS ─────────────────────────────────────── */
+const DPASS = 'Vale@2026';
+
+const INIT_USERS = [
+  {id:1,  nome:'Adriano Bíula',    empresa:'SONDA', perfil:'USER',          email:'c0693929@vale.com', tel:'91980601360', senha:DPASS},
+  {id:2,  nome:'Daniel Oliveira',  empresa:'SONDA', perfil:'USER',          email:'c0699613@vale.com', tel:'61991812323', senha:DPASS},
+  {id:3,  nome:'Josué Gomes',      empresa:'SONDA', perfil:'ADMINISTRADOR', email:'c0698443@vale.com', tel:'91981908702', senha:DPASS},
+  {id:4,  nome:'Jonatha Costa',    empresa:'SONDA', perfil:'USER',          email:'c0699611@vale.com', tel:'86994764493', senha:DPASS},
+  {id:5,  nome:'Leno Dias',        empresa:'SONDA', perfil:'USER',          email:'c0631672@vale.com', tel:'91980315905', senha:DPASS},
+  {id:6,  nome:'Lucas Cruz',       empresa:'SONDA', perfil:'USER',          email:'c0655961@vale.com', tel:'94992119301', senha:DPASS},
+  {id:7,  nome:'Mateus Cardoso',   empresa:'SONDA', perfil:'USER',          email:'c0707708@vale.com', tel:'94991745383', senha:DPASS},
+  {id:8,  nome:'Matheus Campos',   empresa:'SONDA', perfil:'USER',          email:'c0719159@vale.com', tel:'',            senha:DPASS},
+  {id:9,  nome:'Robson Carmo',     empresa:'SONDA', perfil:'ADMINISTRADOR', email:'c0699118@vale.com', tel:'91981038107', senha:DPASS},
+  {id:10, nome:'Tales Augusto',    empresa:'SONDA', perfil:'USER',          email:'c0719239@vale.com', tel:'63992851527', senha:DPASS},
+  {id:11, nome:'Thiago Paranhos',  empresa:'SONDA', perfil:'USER',          email:'c0722621@vale.com', tel:'94991041848', senha:DPASS},
+  {id:12, nome:'Waldecyr Souza',   empresa:'SONDA', perfil:'USER',          email:'c0631638@vale.com', tel:'92050364949', senha:DPASS},
+  {id:13, nome:'Wueder Trindade',  empresa:'SONDA', perfil:'USER',          email:'c0685815@vale.com', tel:'91984473488', senha:DPASS},
+  {id:14, nome:'Wilian Santos',   empresa:'SONDA', perfil:'USER',          email:'c0693925@vale.com', tel:'63992844141', senha:DPASS},
+];
+
+const STATUS_OPTS = [
+  'Executada',
+  'Pendente de execução',
+  'Pendente de encerramento técnico',
+  'Falta HH',
+  'Falta de material',
+  'Cancelada',
+  'Antecipada',
+  'Em execução',
+  'Reprogramada',
+  'Bloqueio de acesso',
+  'Falta de liberação',
+  'Aguardando aprovação',
+];
+
+/* ── STATE ──────────────────────────────────────────── */
+let CU   = null; // current user
+let CRPT = null; // current report
+
+/* ── STORAGE ────────────────────────────────────────── */
+const ls = {
+  getUsers:   ()  => JSON.parse(localStorage.getItem('lte_users')   || 'null') || INIT_USERS,
+  setUsers:   (v) => localStorage.setItem('lte_users',   JSON.stringify(v)),
+  getReports: ()  => JSON.parse(localStorage.getItem('lte_reports') || '[]'),
+  setReports: (v) => localStorage.setItem('lte_reports', JSON.stringify(v)),
+  getCU:      ()  => JSON.parse(localStorage.getItem('lte_cu')      || 'null'),
+  setCU:      (v) => v ? localStorage.setItem('lte_cu', JSON.stringify(v)) : localStorage.removeItem('lte_cu'),
+  // Agenda
+  getAgenda:  ()  => JSON.parse(localStorage.getItem('lte_agenda')  || '[]'),
+  setAgenda:  (v) => localStorage.setItem('lte_agenda',  JSON.stringify(v)),
+  getEscalas: ()  => JSON.parse(localStorage.getItem('lte_escalas') || '[]'),
+  setEscalas: (v) => localStorage.setItem('lte_escalas', JSON.stringify(v)),
+  getAusencias:()=> JSON.parse(localStorage.getItem('lte_ausencias')||'[]'),
+  setAusencias:(v)=> localStorage.setItem('lte_ausencias',JSON.stringify(v)),
+  getUploads: ()  => JSON.parse(localStorage.getItem('lte_uploads') || '[]'),
+  setUploads: (v) => localStorage.setItem('lte_uploads', JSON.stringify(v)),
+};
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+/* ── UI HELPERS ─────────────────────────────────────── */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById(id);
+  if (pg) pg.classList.add('active');
+  window.scrollTo(0,0);
+  if (id === 'page-dashboard') renderDashboard();
+  if (id === 'page-admin')     renderAdmin();
+  if (id === 'page-agenda')    renderAgenda();
+  if (id === 'page-escalas')   renderEscalas();
+  if (id === 'page-ausencias') renderAusencias();
+  if (id === 'page-uploads') renderUploads();
+}
+
+function toast(msg, type='i') {
+  const w = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const ico = {i:'ℹ️',s:'✅',e:'❌',w:'⚠️'}[type]||'ℹ️';
+  t.textContent = `${ico} ${msg}`;
+  t.onclick = () => t.remove();
+  w.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+function loader(on) { document.getElementById('loader').classList.toggle('on', on); }
+
+function openModal(html) {
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const p = document.getElementById(id);
+  if (p) p.classList.add('active');
+  if (id === 'tab-allrpts') renderAdminRpts();
+  if (id === 'tab-users')   renderUsersList();
+}
+
+/* ── AUTH ────────────────────────────────────────────── */
+function buildLoginSel() {
+  const sel = document.getElementById('lg-user');
+  const users = ls.getUsers();
+  sel.innerHTML = '<option value="">Selecione seu nome...</option>';
+  users.forEach(u => {
+    const o = document.createElement('option');
+    o.value = u.id;
+    o.textContent = `${u.nome}`;
+    sel.appendChild(o);
+  });
+}
+
+function doLogin() {
+  const uid  = document.getElementById('lg-user').value;
+  const pass = document.getElementById('lg-pass').value;
+  const err  = document.getElementById('lg-err');
+  err.style.display = 'none';
+  if (!uid)  { err.textContent='⚠️ Selecione um usuário'; err.style.display='block'; return; }
+  if (!pass) { err.textContent='⚠️ Digite a senha';        err.style.display='block'; return; }
+  const user = ls.getUsers().find(u => String(u.id) === uid);
+  if (!user || user.senha !== pass) { err.style.display='block'; return; }
+  CU = user;
+  ls.setCU(user);
+  setupDash();
+  showPage('page-dashboard');
+}
+
+function doLogout() {
+  CU = null; ls.setCU(null);
+  document.getElementById('lg-pass').value = '';
+  document.getElementById('lg-err').style.display = 'none';
+  buildLoginSel();
+  showPage('page-login');
+}
+
+document.getElementById('lg-pass').addEventListener('keypress', e => { if(e.key==='Enter') doLogin(); });
+
+function setupDash() {
+  const u = CU;
+  document.getElementById('d-ava').textContent  = u.nome[0].toUpperCase();
+  document.getElementById('d-name').textContent = u.nome.split(' ')[0];
+  document.getElementById('d-role').textContent = u.perfil;
+  document.getElementById('btn-admin-dash').style.display = u.perfil==='ADMINISTRADOR' ? '' : 'none';
+}
+
+/* ── DASHBOARD ────────────────────────────────────────── */
+function renderDashboard() {
+  renderStats();
+  renderReports();
+}
+
+function renderStats() {
+  const all   = ls.getReports();
+  const mine  = CU.perfil==='ADMINISTRADOR' ? all : all.filter(r => r.uid == CU.id);
+  const today = new Date().toISOString().slice(0,10);
+  const tday  = mine.filter(r => r.createdAt?.slice(0,10) === today).length;
+  const users = ls.getUsers().length;
+
+  let html = `
+    <div class="stat-card">
+      <div class="s-icon"><i class="fa fa-file-alt"></i></div>
+      <div class="s-val">${mine.length}</div>
+      <div class="s-lbl">Meus Relatórios</div>
+    </div>
+    <div class="stat-card">
+      <div class="s-icon"><i class="fa fa-calendar-day"></i></div>
+      <div class="s-val">${tday}</div>
+      <div class="s-lbl">Hoje</div>
+    </div>
+    <div class="stat-card">
+      <div class="s-icon"><i class="fa fa-users"></i></div>
+      <div class="s-val">${users}</div>
+      <div class="s-lbl">Usuários</div>
+    </div>`;
+  if (CU.perfil==='ADMINISTRADOR') {
+    html += `<div class="stat-card">
+      <div class="s-icon"><i class="fa fa-globe"></i></div>
+      <div class="s-val">${all.length}</div>
+      <div class="s-lbl">Total Geral</div>
+    </div>`;
+  }
+  document.getElementById('stats-grid').innerHTML = html;
+}
+
+function renderReports() {
+  const q    = document.getElementById('search-box')?.value?.toLowerCase() || '';
+  const all  = ls.getReports();
+  let list   = CU.perfil==='ADMINISTRADOR' ? all : all.filter(r => r.uid == CU.id);
+  if (q) list = list.filter(r =>
+    (r.equipe||'').toLowerCase().includes(q) ||
+    (r.turma||'').toLowerCase().includes(q)  ||
+    (r.data||'').includes(q) ||
+    (r.byName||'').toLowerCase().includes(q)
+  );
+  list.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+  const el = document.getElementById('reports-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><i class="fa fa-folder-open"></i><p>Nenhum relatório encontrado. Crie um novo!</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(r => `
+    <div class="rpt-card" onclick="editReport('${r.id}')">
+      <div style="flex:1;min-width:0;">
+        <div class="rpt-title">
+          <i class="fa fa-file-alt" style="color:var(--accent);margin-right:7px;"></i>
+          ${r.equipe||'Sem equipe'} — Turma ${r.turma||'?'} — Dia ${r.dia||'?'}
+        </div>
+        <div class="rpt-meta">
+          <span>📅 ${fDate(r.data)}</span>
+          <span>👤 ${r.byName||'—'}</span>
+          <span>📋 ${(r.ordens||[]).filter(o=>o.ordem).length} ordens</span>
+          <span class="mono" style="font-size:10px;">${r.createdAt?.slice(0,10)||'—'}</span>
+        </div>
+      </div>
+      <div class="rpt-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="editReport('${r.id}')" title="Editar">
+          <i class="fa fa-edit"></i>
+        </button>
+        <button class="btn btn-gold btn-sm btn-icon" onclick="viewReport('${r.id}')" title="Visualizar">
+          <i class="fa fa-eye"></i>
+        </button>
+        <button class="del-btn" onclick="delReport('${r.id}')" title="Excluir">
+          <i class="fa fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function delReport(id) {
+  if (!confirm('Excluir este relatório permanentemente?')) return;
+  ls.setReports(ls.getReports().filter(r => r.id !== id));
+  renderDashboard();
+  toast('Relatório excluído','w');
+}
+
+function fDate(d) {
+  if (!d) return '—';
+  const p = d.split('-');
+  return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
+}
+
+/* ── EDITOR ───────────────────────────────────────────── */
+function buildNumList(containerId, count, values=[]) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  for (let i=0; i<count; i++) {
+    const div = document.createElement('div');
+    div.className = 'num-item';
+    div.innerHTML = `<span class="num-badge">${i+1}</span><input type="text" value="${esc(values[i]||'')}" placeholder="—">`;
+    el.appendChild(div);
+  }
+}
+
+function getNumList(id) {
+  return [...document.querySelectorAll(`#${id} input`)].map(i => i.value);
+}
+
+function esc(s) { return String(s).replace(/"/g,'&quot;'); }
+
+function buildOrdersTable(orders=[]) {
+  const tbody = document.getElementById('ord-body');
+  tbody.innerHTML = '';
+  const rows = [...orders];
+  while (rows.length < 13) rows.push({ordem:'',status:''});
+  rows.forEach((o,i) => addOrdRow(o,i+1));
+}
+
+function addOrdRow(o={},n) {
+  const tbody = document.getElementById('ord-body');
+  if (n===undefined) n = tbody.rows.length + 1;
+  const opts = STATUS_OPTS.map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="mono" style="color:var(--dim);font-size:12px;text-align:center;">${n}</td>
+    <td><input type="text" value="${esc(o.ordem||'')}" placeholder="Nº da Ordem" class="mono"></td>
+    <td>
+      <select>
+        <option value="">— Selecionar —</option>
+        ${opts}
+      </select>
+    </td>
+    <td style="text-align:center;">
+      <button onclick="this.closest('tr').remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;padding:4px 6px;">
+        <i class="fa fa-times"></i>
+      </button>
+    </td>`;
+  tbody.appendChild(tr);
+}
+
+function addOrderRow() {
+  const tbody = document.getElementById('ord-body');
+  addOrdRow({}, tbody.rows.length+1);
+}
+
+function getOrders() {
+  return [...document.querySelectorAll('#ord-body tr')].map(tr => ({
+    ordem:  tr.cells[1]?.querySelector('input')?.value?.trim()||'',
+    status: tr.cells[2]?.querySelector('select')?.value||'',
+  }));
+}
+
+function newReport() {
+  CRPT = { id: uid(), uid: CU.id, byName: CU.nome, createdAt: new Date().toISOString() };
+  clearForm();
+  document.getElementById('f-data').value = new Date().toISOString().slice(0,10);
+  document.getElementById('editor-sub').textContent = 'Novo Relatório';
+  document.getElementById('drop-zone').style.display = '';
+  showPage('page-editor');
+}
+
+function clearForm() {
+  ['f-equipe','f-turma','f-dia','f-data','f-obs','v0','v1','v2','v3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  buildOrdersTable();
+  buildNumList('out-list',  11);
+  buildNumList('redel-list', 4);
+  buildNumList('mw-list',    4);
+  buildNumList('lte-list',   4);
+  buildNumList('clima-list', 4);
+}
+
+function editReport(id) {
+  const r = ls.getReports().find(x => x.id === id);
+  if (!r) return;
+  CRPT = r;
+  document.getElementById('f-equipe').value = r.equipe||'';
+  document.getElementById('f-turma').value  = r.turma||'';
+  document.getElementById('f-dia').value    = r.dia||'';
+  document.getElementById('f-data').value   = r.data||'';
+  document.getElementById('f-obs').value    = r.obs||'';
+  ['v0','v1','v2','v3'].forEach((id,i) => {
+    document.getElementById(id).value = (r.veiculos||[])[i]||'';
+  });
+  buildOrdersTable(r.ordens||[]);
+  buildNumList('out-list',  11, r.outras||[]);
+  buildNumList('redel-list', 4, r.redel||[]);
+  buildNumList('mw-list',    4, r.mw||[]);
+  buildNumList('lte-list',   4, r.lte||[]);
+  buildNumList('clima-list', 4, r.clima||[]);
+  document.getElementById('editor-sub').textContent = `Editando — ${fDate(r.data)}`;
+  document.getElementById('drop-zone').style.display = 'none';
+  showPage('page-editor');
+}
+
+function collect() {
+  return {
+    ...CRPT,
+    equipe:   document.getElementById('f-equipe').value,
+    turma:    document.getElementById('f-turma').value,
+    dia:      document.getElementById('f-dia').value,
+    data:     document.getElementById('f-data').value,
+    obs:      document.getElementById('f-obs').value,
+    veiculos: ['v0','v1','v2','v3'].map(id => document.getElementById(id).value),
+    ordens:   getOrders(),
+    outras:   getNumList('out-list'),
+    redel:    getNumList('redel-list'),
+    mw:       getNumList('mw-list'),
+    lte:      getNumList('lte-list'),
+    clima:    getNumList('clima-list'),
+  };
+}
+
+function saveReport() {
+  const r = collect();
+  const all = ls.getReports();
+  const i = all.findIndex(x => x.id === r.id);
+  if (i>=0) all[i]=r; else all.push(r);
+  ls.setReports(all);
+  CRPT = r;
+  toast('Relatório salvo!','s');
+}
+
+function previewReport() {
+  saveReport();
+  renderPreview(collect());
+  showPage('page-preview');
+}
+
+function viewReport(id) {
+  const r = ls.getReports().find(x => x.id===id);
+  if (!r) return;
+  CRPT = r;
+  renderPreview(r);
+  showPage('page-preview');
+}
+
+/* ── PREVIEW (matches image layout) ─────────────────── */
+function renderPreview(r) {
+  const vehs   = (r.veiculos||[]).filter(v=>v);
+  const ordens = (r.ordens||[]).filter(o=>o.ordem||o.status);
+  const outras = r.outras||[];
+  const redel  = r.redel||[];
+  const mw     = r.mw||[];
+  const lte    = r.lte||[];
+  const clima  = r.clima||[];
+
+  function listLi(arr, n) {
+    let out='';
+    for(let i=0;i<n;i++){
+      out+=`<li><span class="rn">${i+1}</span><span class="rv">${arr[i]||''}</span></li>`;
+    }
+    return out;
+  }
+
+  function ordRows(arr) {
+    if(!arr.length) return `<tr><td class="t-ord" colspan="2" style="color:#aaa;text-align:center;font-size:10px;">—</td></tr>`;
+    return arr.slice(0,15).map(o=>`
+      <tr>
+        <td class="t-ord">${o.ordem}</td>
+        <td class="t-sta">${o.status}</td>
+      </tr>`).join('');
+  }
+
+  const html = `
+    <div class="report-doc" id="rpt-export">
+      <!-- HEADER -->
+      <div class="rdoc-hdr">
+        <div class="rdoc-hdr-l">Desmobilização Mina LTE - Sonda</div>
+        <div class="rdoc-hdr-r">Status MW / LTE</div>
+      </div>
+
+      <!-- BODY -->
+      <div class="rdoc-body">
+
+        <!-- COL 1: Info + Vehicles + PCM -->
+        <div class="rdoc-col">
+          <div class="rinfo-grid">
+            <div class="rinfo-row"><span class="rinfo-lbl">Equipe:</span> <span class="rinfo-val">${r.equipe||''}</span></div>
+            <div class="rinfo-row"><span class="rinfo-lbl">Turma:</span> <span class="rinfo-val">${r.turma||''}</span></div>
+            <div class="rinfo-row"><span class="rinfo-lbl">Dia:</span> <span class="rinfo-val">${r.dia||''}</span></div>
+            <div class="rinfo-row"><span class="rinfo-lbl">Data:</span> <span class="rinfo-val">${fDate(r.data)}</span></div>
+          </div>
+          ${vehs.length ? `
+          <div class="rveh">
+            <div class="rveh-lbl">Checklist Veículos:</div>
+            ${vehs.map(v=>`<div class="rveh-val">${v}</div>`).join('')}
+          </div>` : ''}
+          <div class="rsec">Programação PCM (ordens)</div>
+          <table class="rpcm"><tbody>${ordRows(ordens)}</tbody></table>
+        </div>
+
+        <!-- COL 2: Outras + REDEL -->
+        <div class="rdoc-col">
+          <div class="rsec" style="margin-top:0;">Outras Atividades</div>
+          <ul class="rlist">${listLi(outras,11)}</ul>
+          <div class="rsec">REDEL</div>
+          <ul class="rlist">${listLi(redel,4)}</ul>
+          ${r.obs ? `<div style="margin-top:10px;font-size:10px;color:#333;background:#eef4ff;padding:7px;border-radius:3px;border-left:3px solid #2a5298;">
+            <b>Obs:</b> ${r.obs}</div>` : ''}
+        </div>
+
+        <!-- COL 3: MW/LTE Status -->
+        <div class="rdoc-col">
+          <div class="rsec" style="margin-top:0;">Rádios MW</div>
+          <ul class="rlist">${listLi(mw,4)}</ul>
+          <div class="rsec">Rede LTE</div>
+          <ul class="rlist">${listLi(lte,4)}</ul>
+          <div class="rsec">Clima Tempo</div>
+          <ul class="rlist">${listLi(clima,4)}</ul>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="rdoc-ftr">
+        <span>⚡ LTE Sonda Report System — Gerado por: ${r.byName||'—'}</span>
+        <span>${new Date().toLocaleString('pt-BR')}</span>
+      </div>
+    </div>`;
+
+  document.getElementById('preview-wrap').innerHTML = html;
+}
+
+/* ── EXCEL IMPORT ───────────────────────────────────── */
+function importExcel(input) {
+  const f = input.files[0];
+  if (f) parseExcel(f);
+  input.value = '';
+}
+
+function handleFileDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) parseExcel(f);
+}
+
+function parseExcel(file) {
+  loader(true);
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb   = XLSX.read(data, {type:'uint8'});
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false});
+
+      const orders = [];
+      for (let i=1; i<rows.length; i++) {
+        const row = rows[i];
+        if (!row || !row[2]) continue;
+        const ordem = String(row[2]).trim();
+        if (!ordem || ordem==='NÃO APAGAR' || ordem==='ORDEM') continue;
+        orders.push({ ordem, status:'' });
+      }
+
+      if (!orders.length) { toast('Nenhuma ordem no arquivo','w'); loader(false); return; }
+
+      buildOrdersTable(orders);
+      document.getElementById('drop-zone').style.display = 'none';
+      toast(`${orders.length} ordens importadas!`, 's');
+    } catch(err) {
+      toast('Erro ao ler arquivo Excel','e');
+      console.error(err);
+    }
+    loader(false);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function importUsers(input) {
+  const f = input.files[0];
+  if (!f) return;
+  loader(true);
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb   = XLSX.read(data, {type:'uint8'});
+      const sn   = wb.SheetNames.find(s => /usu/i.test(s)) || wb.SheetNames[0];
+      const ws   = wb.Sheets[sn];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false});
+
+      const users = [];
+      for (let i=1; i<rows.length; i++) {
+        const row = rows[i];
+        if (!row || !row[1]) continue;
+        users.push({
+          id:      Number(row[0])||i,
+          nome:    String(row[1]).replace(/\(administrador\)/gi,'').trim(),
+          empresa: String(row[2]||'SONDA'),
+          perfil:  String(row[3]||'USER').toUpperCase(),
+          email:   String(row[4]||''),
+          tel:     String(row[5]||''),
+          senha:   DPASS,
+        });
+      }
+
+      if (!users.length) { toast('Nenhum usuário encontrado','w'); loader(false); return; }
+      ls.setUsers(users);
+      buildLoginSel();
+      toast(`${users.length} usuários importados!`,'s');
+      renderAdmin();
+    } catch(err) {
+      toast('Erro ao importar usuários','e');
+    }
+    loader(false);
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ── EXPORT ─────────────────────────────────────────── */
+async function xPDF() {
+  loader(true);
+  try {
+    const el = document.getElementById('rpt-export');
+    const canvas = await html2canvas(el, {scale:2, useCORS:true, backgroundColor:'#fff'});
+    const img = canvas.toDataURL('image/png');
+    const {jsPDF} = window.jspdf;
+    const pdf = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+    const pw = pdf.internal.pageSize.getWidth();
+    const ph = pdf.internal.pageSize.getHeight();
+    const ratio = canvas.width / canvas.height;
+    let w = pw-16, h = w/ratio;
+    if (h > ph-16) { h=ph-16; w=h*ratio; }
+    pdf.addImage(img,'PNG', (pw-w)/2, 8, w, h);
+    pdf.save(`LTE_Relatorio_${CRPT?.data||'sem-data'}.pdf`);
+    toast('PDF gerado!','s');
+  } catch(err) {
+    toast('Erro ao gerar PDF','e');
+    console.error(err);
+  }
+  loader(false);
+}
+
+async function xImage() {
+  loader(true);
+  try {
+    const el = document.getElementById('rpt-export');
+    const canvas = await html2canvas(el, {scale:2, useCORS:true, backgroundColor:'#fff'});
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `LTE_Relatorio_${CRPT?.data||'sem-data'}.png`;
+    a.click();
+    toast('Imagem salva!','s');
+  } catch(err) {
+    toast('Erro ao gerar imagem','e');
+  }
+  loader(false);
+}
+
+function xText() {
+  const r = CRPT; if (!r) return;
+  const line = '─'.repeat(52);
+  const arr2txt = (arr, n) => {
+    const out=[];
+    for(let i=0;i<n;i++) if(arr[i]) out.push(`  ${i+1}. ${arr[i]}`);
+    return out.join('\n')||'  —';
+  };
+  const txt = `
+⚡ RELATÓRIO LTE SONDA — VALE SONDA
+${line}
+📋 DESMOBILIZAÇÃO MINA LTE - SONDA
+
+👥 Equipe : ${r.equipe||'—'}
+🔄 Turma  : ${r.turma||'—'}
+📅 Dia    : ${r.dia||'—'}
+📆 Data   : ${fDate(r.data)}
+
+🚗 CHECKLIST VEÍCULOS:
+${(r.veiculos||[]).filter(v=>v).map(v=>`  • ${v}`).join('\n')||'  —'}
+
+${line}
+📋 PROGRAMAÇÃO PCM (ORDENS):
+${(r.ordens||[]).filter(o=>o.ordem).map(o=>`  [${o.ordem}]  ${o.status||'—'}`).join('\n')||'  —'}
+
+${line}
+📝 OUTRAS ATIVIDADES:
+${arr2txt(r.outras||[], 11)}
+
+${line}
+⚡ REDEL:
+${arr2txt(r.redel||[], 4)}
+
+${line}
+📡 STATUS MW / LTE
+
+📻 RÁDIOS MW:
+${arr2txt(r.mw||[], 4)}
+
+📶 REDE LTE:
+${arr2txt(r.lte||[], 4)}
+
+🌤️ CLIMA / TEMPO:
+${arr2txt(r.clima||[], 4)}
+${r.obs ? `\n${line}\n📌 OBSERVAÇÕES:\n  ${r.obs}\n` : ''}
+${line}
+Gerado por: ${r.byName||'—'} | ${new Date().toLocaleString('pt-BR')}
+Sistema LTE Sonda Report — VALE
+`.trim();
+
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `LTE_Relatorio_${r.data||'sem-data'}.txt`;
+  a.click();
+  toast('Arquivo de texto exportado!','s');
+}
+
+/* ── ADMIN ───────────────────────────────────────────── */
+function renderAdmin() {
+  renderUsersList();
+}
+
+function renderUsersList() {
+  const users = ls.getUsers();
+  const el = document.getElementById('users-list');
+  if (!el) return;
+  el.innerHTML = users.map(u => `
+    <div class="user-row">
+      <div class="u-ava">${u.nome[0].toUpperCase()}</div>
+      <div class="u-info">
+        <div class="u-name">${u.nome}</div>
+        <div class="u-email">${u.email}</div>
+      </div>
+      <span class="tag ${u.perfil==='ADMINISTRADOR'?'tag-admin':'tag-user'}">${u.perfil}</span>
+      <div class="u-actions">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="editUserM(${u.id})" title="Editar">
+          <i class="fa fa-edit"></i>
+        </button>
+        ${u.id !== CU?.id ? `<button class="del-btn" onclick="delUser(${u.id})"><i class="fa fa-trash"></i></button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminRpts() {
+  const all = ls.getReports().sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+  const el = document.getElementById('admin-rpts');
+  if (!all.length) { el.innerHTML=`<div class="empty-state"><i class="fa fa-folder-open"></i><p>Nenhum relatório</p></div>`; return; }
+  el.innerHTML = all.map(r => `
+    <div class="rpt-card" onclick="viewReport('${r.id}')">
+      <div style="flex:1">
+        <div class="rpt-title">${r.equipe||'—'} — Turma ${r.turma||'?'} — ${fDate(r.data)}</div>
+        <div class="rpt-meta">
+          <span>👤 ${r.byName||'?'}</span>
+          <span>📋 ${(r.ordens||[]).filter(o=>o.ordem).length} ordens</span>
+        </div>
+      </div>
+      <div class="rpt-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-gold btn-sm btn-icon" onclick="viewReport('${r.id}')"><i class="fa fa-eye"></i></button>
+        <button class="del-btn" onclick="delReport('${r.id}');renderAdminRpts()"><i class="fa fa-trash"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+/* User modals */
+function openAddUser() {
+  openModal(`
+    <h3 class="gradient-text"><i class="fa fa-user-plus"></i> Adicionar Usuário</h3>
+    <div class="fgroup" style="margin-bottom:14px;"><label>Nome Completo</label><input id="m-nome" type="text" placeholder="Nome do usuário"></div>
+    <div class="fgroup" style="margin-bottom:14px;"><label>E-mail Teams</label><input id="m-email" type="email" placeholder="cXXXXXXX@vale.com"></div>
+    <div class="fgroup" style="margin-bottom:14px;">
+      <label>Perfil</label>
+      <select id="m-perfil">
+        <option value="USER">USER</option>
+        <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+      </select>
+    </div>
+    <div class="fgroup" style="margin-bottom:0;"><label>Senha inicial</label><input id="m-senha" type="password" placeholder="Vale@2026"></div>
+    <div class="mbtns">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="addUser()"><i class="fa fa-check"></i> Adicionar</button>
+    </div>
+  `);
+}
+
+function addUser() {
+  const nome  = document.getElementById('m-nome')?.value?.trim();
+  const email = document.getElementById('m-email')?.value?.trim();
+  const perfil= document.getElementById('m-perfil')?.value;
+  const senha = document.getElementById('m-senha')?.value || DPASS;
+  if (!nome || !email) { toast('Preencha nome e e-mail','w'); return; }
+  const users = ls.getUsers();
+  const newId = Math.max(0, ...users.map(u=>u.id)) + 1;
+  users.push({id:newId, nome, empresa:'SONDA', perfil, email, tel:'', senha});
+  ls.setUsers(users);
+  closeModal();
+  renderUsersList();
+  buildLoginSel();
+  toast('Usuário adicionado!','s');
+}
+
+function editUserM(uid) {
+  const u = ls.getUsers().find(x=>x.id==uid); if(!u) return;
+  openModal(`
+    <h3 class="gradient-text"><i class="fa fa-user-edit"></i> Editar Usuário</h3>
+    <div class="fgroup" style="margin-bottom:14px;"><label>Nome</label><input id="eu-nome" type="text" value="${esc(u.nome)}"></div>
+    <div class="fgroup" style="margin-bottom:14px;">
+      <label>Perfil</label>
+      <select id="eu-perfil">
+        <option value="USER" ${u.perfil==='USER'?'selected':''}>USER</option>
+        <option value="ADMINISTRADOR" ${u.perfil==='ADMINISTRADOR'?'selected':''}>ADMINISTRADOR</option>
+      </select>
+    </div>
+    <div class="fgroup" style="margin-bottom:14px;"><label>E-mail Teams</label><input id="eu-email" type="email" value="${esc(u.email)}"></div>
+    <div class="fgroup" style="margin-bottom:0;"><label>Nova Senha (deixe vazio para manter)</label><input id="eu-senha" type="password" placeholder=""></div>
+    <div class="mbtns">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser(${uid})"><i class="fa fa-save"></i> Salvar</button>
+    </div>
+  `);
+}
+
+function saveUser(uid) {
+  const users = ls.getUsers();
+  const u = users.find(x=>x.id==uid); if(!u) return;
+  u.nome  = document.getElementById('eu-nome')?.value?.trim()||u.nome;
+  u.perfil= document.getElementById('eu-perfil')?.value||u.perfil;
+  u.email = document.getElementById('eu-email')?.value?.trim()||u.email;
+  const ns = document.getElementById('eu-senha')?.value;
+  if (ns) u.senha = ns;
+  ls.setUsers(users);
+  closeModal();
+  renderUsersList();
+  buildLoginSel();
+  // Update current user if editing self
+  if (CU && CU.id === uid) {
+    CU = u; ls.setCU(u); setupDash();
+  }
+  toast('Usuário atualizado!','s');
+}
+
+function delUser(uid) {
+  if (!confirm('Excluir este usuário?')) return;
+  ls.setUsers(ls.getUsers().filter(u=>u.id!=uid));
+  renderUsersList();
+  buildLoginSel();
+  toast('Usuário removido','w');
+}
+
+/* ── INIT ────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  // Ensure users are stored
+  if (!localStorage.getItem('lte_users')) ls.setUsers(INIT_USERS);
+
+  // Check session
+  const saved = ls.getCU();
+  if (saved) {
+    // Verify user still exists
+    const found = ls.getUsers().find(u => u.id == saved.id);
+    if (found) {
+      CU = found; setupDash(); showPage('page-dashboard'); return;
+    }
+  }
+  buildLoginSel();
+  showPage('page-login');
+});
+
+/* ── AGENDA ─────────────────────────────────────────── */
+const IMPORTANCIA_OPTS = ['Importante','Moderado','Crítico'];
+const TURMAS = ['A','B','C','D','ADM'];
+
+function renderAgenda() {
+  const list = ls.getAgenda();
+  document.getElementById('agenda-stats').innerHTML = '<div class="stat-card"><div class="s-icon"><i class="fa fa-calendar"></i></div><div class="s-val">'+list.length+'</div><div class="s-lbl">Eventos</div></div><div class="stat-card"><div class="s-icon"><i class="fa fa-share"></i></div><div class="s-val">'+list.filter(x=>x.compartilhar==='S').length+'</div><div class="s-lbl">Compartilhados</div></div>';
+  if (!list.length) { document.getElementById('agenda-list').innerHTML = '<div class="empty-state"><i class="fa fa-calendar"></i><p>Nenhum evento</p></div>'; return; }
+  document.getElementById('agenda-list').innerHTML = list.map(x => '<div class="rpt-card"><div style="flex:1;"><div class="rpt-title">'+x.titulo+'</div><div class="rpt-meta"><span>'+x.data+'</span><span class="tag-'+(x.importancia==='Crítico'?'obra':x.importancia==='Moderado'?'manut':'user')+'">'+x.importancia+'</span>'+(x.compartilhar==='S'?'<span style="color:var(--success)"><i class="fa fa-share"></i> Compartilhado</span>':'')+'</div></div><button class="del-btn" onclick="delAgenda(\''+x.id+'\')"><i class="fa fa-trash"></i></button></div>').join('');
+}
+
+function openModalAgenda(id) {
+  const e = id ? ls.getAgenda().find(x=>x.id===id) : {};
+  openModal('<h3><i class="fa fa-'+(id?'edit':'plus')+'"></i> '+(id?'Editar':'Novo')+' Evento</h3><div class="fgroup"><label>Título</label><input id="ag-titulo" value="'+e.titulo+'"></div><div class="fgroup"><label>Data</label><input type="date" id="ag-data" value="'+e.data+'"></div><div class="fgroup"><label>Importância</label><select id="ag-importancia">'+IMPORTANCIA_OPTS.map(i=>'<option '+(e.importancia===i?'selected':'')+'>'+i+'</option>').join('')+'</select></div><div class="fgroup"><label>Compartilhar?</label><select id="ag-compartilhar"><option value="S"'+(e.compartilhar==='S'?'selected':'')+'>Sim</option><option value="N"'+(e.compartilhar==='N'||!e.compartilhar?'selected':'')+'>Não</option></select></div><div class="mbtns"><button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="salvarAgenda(\''+(id||'')+'\')"><i class="fa fa-save"></i> Salvar</button></div>');
+}
+
+function salvarAgenda(id) {
+  const t = document.getElementById('ag-titulo').value, d = document.getElementById('ag-data').value, i = document.getElementById('ag-importancia').value, c = document.getElementById('ag-compartilhar').value;
+  if (!t||!d) { toast('Preencha todos','e'); return; }
+  let lst = ls.getAgenda();
+  if (id) { const idx = lst.findIndex(x=>x.id===id); if(idx>-1)lst[idx]={...lst[idx],titulo:t,data:d,importancia:i,compartilhar:c}; }
+  else { lst.push({id:uid(),titulo:t,data:d,importancia:i,compartilhar:c,uid:CU.id}); }
+  ls.setAgenda(lst); renderAgenda(); closeModal(); toast('Salvo!','s');
+}
+
+function delAgenda(id) { if(!confirm('Excluir?'))return; ls.setAgenda(ls.getAgenda().filter(x=>x.id!==id)); renderAgenda(); toast('Excluído','w'); }
+
+/* ── ESCALAS ────────────────────────────────────────── */
+function renderEscalas() {
+  const list = ls.getEscalas();
+  document.getElementById('escalas-stats').innerHTML = '<div class="stat-card"><div class="s-icon"><i class="fa fa-users"></i></div><div class="s-val">'+list.length+'</div><div class="s-lbl">Escalas</div></div>';
+  if(!list.length){document.getElementById('escalas-list').innerHTML='<div class="empty-state"><i class="fa fa-users"></i><p>Nenhuma escala</p></div>';return;}
+  const cores={A:'#00c6ff',B:'#f0a500',C:'#00e676',D:'#ff1744',ADM:'#9c27b0'};
+  document.getElementById('escalas-list').innerHTML = list.map(x => '<div class="rpt-card" style="border-left:4px solid '+(cores[x.turma]||'#00c6ff')+'"><div style="flex:1;"><div class="rpt-title">'+x.regime+' - Turma '+x.turma+'</div><div class="rpt-meta"><span>'+x.inicio+' até '+x.fim+'</span><span>'+x.equipe+'</span></div></div><button class="del-btn" onclick="delEscala(\''+x.id+'\')"><i class="fa fa-trash"></i></button></div>').join('');
+}
+
+function openModalEscala(id) {
+  const e = id ? ls.getEscalas().find(x=>x.id===id) : {};
+  openModal('<h3><i class="fa fa-'+(id?'edit':'plus')+'"></i> '+(id?'Editar':'Nova')+' Escala</h3><div class="fgroup"><label> regime (ex: 1x1, 3x3, 7x7)</label><input id="es-regime" value="'+e.regime+'"></div><div class="fgroup"><label>Turma</label><select id="es-turma">'+TURMAS.map(t=>'<option '+(e.turma===t?'selected':'')+'>'+t+'</option>').join('')+'</select></div><div class="fgroup"><label>Início</label><input type="date" id="es-inicio" value="'+e.inicio+'"></div><div class="fgroup"><label>Fim</label><input type="date" id="es-fim" value="'+e.fim+'"></div><div class="fgroup"><label>Equipe</label><input id="es-equipe" value="'+e.equipe+'"></div><div class="mbtns"><button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="salvarEscala(\''+(id||'')+'\')"><i class="fa fa-save"></i> Salvar</button></div>');
+}
+
+function salvarEscala(id) {
+  const r=document.getElementById('es-regime').value,t=document.getElementById('es-turma').value,i=document.getElementById('es-inicio').value,f=document.getElementById('es-fim').value,e=document.getElementById('es-equipe').value;
+  if(!r||!i||!f){toast('Preencha todos','e');return;}
+  let lst=ls.getEscalas();
+  if(id){const idx=lst.findIndex(x=>x.id===id);if(idx>-1)lst[idx]={...lst[idx],regime:r,turma:t,inicio:i,fim:f,equipe:e};}
+  else{lst.push({id:uid(),regime:r,turma:t,inicio:i,fim:f,equipe:e,uid:CU.id});}
+  ls.setEscalas(lst);renderEscalas();closeModal();toast('Salvo!','s');
+}
+
+function delEscala(id){if(!confirm('Excluir?'))return;ls.setEscalas(ls.getEscalas().filter(x=>x.id!==id));renderEscalas();toast('Excluído','w');}
+
+/* ── AUSÊNCIAS ───────────────────────────────────────── */
+function renderAusencias(){
+  const list=ls.getAusencias();
+  document.getElementById('ausencias-stats').innerHTML='<div class="stat-card"><div class="s-icon"><i class="fa fa-umbrella-beach"></i></div><div class="s-val">'+list.length+'</div><div class="s-lbl">Solicitações</div></div>';
+  if(!list.length){document.getElementById('ausencias-list').innerHTML='<div class="empty-state"><i class="fa fa-umbrella-beach"></i><p>Nenhuma solicitação</p></div>';return;}
+  document.getElementById('ausencias-list').innerHTML=list.map(x=>{
+    const u=ls.getUsers().find(u=>u.id==x.usuario);
+    return'<div class="rpt-card"><div style="flex:1;"><div class="rpt-title">'+(u?u.nome:'—')+'</div><div class="rpt-meta"><span>'+x.inicio+' até '+x.fim+'</span><span>'+x.tipo+'</span></div></div>'+(CU.perfil==='ADMINISTRADOR'? '<button class="del-btn" onclick="delAusencia(\''+x.id+'\')"><i class="fa fa-trash"></i></button>':'')+'</div>';
+  }).join('');
+}
+
+function openModalAusencia(id){
+  const a=id?ls.getAusencias().find(x=>x.id===id):{};
+  openModal('<h3><i class="fa fa-'+(id?'edit':'plus')+'"></i> '+(id?'Editar':'Nova')+' Ausência</h3><div class="fgroup"><label>Tipo</label><select id="au-tipo"><option value="Férias"'+(a.tipo==='Férias'?'selected':'')+'>Férias</option><option value="Folga"'+(a.tipo==='Folga'?'selected':'')+'>Folga</option></select></div><div class="fgroup"><label>Início</label><input type="date" id="au-inicio" value="'+a.inicio+'"></div><div class="fgroup"><label>Fim</label><input type="date" id="au-fim" value="'+a.fim+'"></div><div class="fgroup"><label>Motivo</label><textarea id="au-motivo">'+(a.motivo||'')+'</textarea></div><div class="mbtns"><button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="salvarAusencia(\''+(id||'')+'\')"><i class="fa fa-save"></i> Salvar</button></div>');
+}
+
+function salvarAusencia(id){
+  const t=document.getElementById('au-tipo').value,i=document.getElementById('au-inicio').value,f=document.getElementById('au-fim').value,m=document.getElementById('au-motivo').value;
+  if(!i||!f){toast('Preencha datas','e');return;}
+  let lst=ls.getAusencias();
+  if(id){const idx=lst.findIndex(x=>x.id===id);if(idx>-1)lst[idx]={...lst[idx],tipo:t,inicio:i,fim:f,motivo:m};}
+  else{lst.push({id:uid(),tipo:t,inicio:i,fim:f,motivo:m,usuario:CU.id});}
+  ls.setAusencias(lst);renderAusencias();closeModal();toast('Salvo!','s');
+}
+
+function delAusencia(id){if(!confirm('Excluir?'))return;ls.setAusencias(ls.getAusencias().filter(x=>x.id!==id));renderAusencias();toast('Excluído','w');}
+
+/* ── UPLOADS ───────────────────────────────────────── */
+function renderUploads(){
+  const list=ls.getUploads();
+  document.getElementById('uploads-stats').innerHTML='<div class="stat-card"><div class="s-icon"><i class="fa fa-image"></i></div><div class="s-val">'+list.length+'</div><div class="s-lbl">Arquivos</div></div>';
+  if(!list.length){document.getElementById('uploads-list').innerHTML='<div class="empty-state"><i class="fa fa-image"></i><p>Nenhum arquivo</p></div>';return;}
+  document.getElementById('uploads-list').innerHTML=list.map(x=>'<div class="rpt-card"><div style="flex:1;"><div class="rpt-title">'+x.nome+'</div><img src="'+x.data+'" style="max-width:200px;border-radius:8px;margin-top:8px;"><div class="fgroup" style="margin-top:8px;"><label>Legenda</label><input id="upl-leg-'+x.id+'" value="'+x.legenda+'" placeholder="Adicione uma legenda..."></div><button class="btn btn-secondary btn-sm" onclick="salvarLegenda(\''+x.id+'\')" style="margin-top:4px;"><i class="fa fa-save"></i> Salvar Legenda</button></div><button class="del-btn" onclick="delUpload(\''+x.id+'\')"><i class="fa fa-trash"></i></button></div>').join('');
+}
+
+function handleUpload(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    let lst=ls.getUploads();lst.push({id:uid(),nome:file.name,data:e.target.result,legenda:'',uid:CU.id});
+    ls.setUploads(lst);renderUploads();toast('Uploadado!','s');
+  };reader.readAsDataURL(file);
+}
+
+function salvarLegenda(id){
+  const lst=ls.getUploads();const idx=lst.findIndex(x=>x.id===id);
+  if(idx>-1){lst[idx].legenda=document.getElementById('upl-leg-'+id).value;ls.setUploads(lst);toast('Legenda salva!','s');}
+}
+
+function delUpload(id){if(!confirm('Excluir?'))return;ls.setUploads(ls.getUploads().filter(x=>x.id!==id));renderUploads();toast('Excluído','w');}
+
+/* ── CORES POR TURMA (CSS) ──────────────────────────── */
+const style=document.createElement('style');
+style.textContent='.tag-importante{background:rgba(255,23,68,0.15);color:#ff1744}.tag-moderado{background:rgba(255,171,0,0.15);color:#ffab00}';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
