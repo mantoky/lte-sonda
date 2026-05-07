@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#05090f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LTE Sonda">
+<title>⚡ LTE Sonda — Relatórios PCM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/agenda.css">
+</head>
+<body>
+
+<div id="config-banner" class="config-banner" style="display:none">
+  ⚠️ Firebase não configurado. Edite <code>js/config.js</code>.
+</div>
+
+<!-- ══ LOGIN ══════════════════════════════════ -->
+<div id="page-login" class="page">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon">⚡</div>
+        <h1 class="gradient-text">LTE Sonda Report</h1>
+        <p class="login-subtitle">VALE SONDA — PCM v2.2</p>
+      </div>
+      <div class="fgroup">
+        <label><i class="fa fa-user-circle"></i> Usuário</label>
+        <select id="lg-user"><option value="">Carregando...</option></select>
+      </div>
+      <div class="fgroup">
+        <label><i class="fa fa-lock"></i> Senha</label>
+        <div class="input-icon-wrap">
+          <input type="password" id="lg-pass" placeholder="Vale@2026" autocomplete="current-password" maxlength="64">
+          <button class="toggle-pass" type="button" onclick="UI.togglePass()"><i class="fa fa-eye" id="pass-eye"></i></button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="Auth.login()"><i class="fa fa-sign-in-alt"></i> Entrar</button>
+      <div class="err-msg" id="lg-err"></div>
+      <div id="setup-btn-wrap" style="display:none;margin-top:8px;">
+        <div style="background:rgba(255,171,0,.08);border:1px solid rgba(255,171,0,.25);border-radius:9px;padding:11px;margin-bottom:10px;font-size:12px;color:var(--warn);">
+          <i class="fa fa-exclamation-triangle" style="margin-right:6px;"></i>
+          Nenhum usuário encontrado. Execute o setup inicial.
+        </div>
+        <button class="btn btn-gold btn-full" onclick="Auth.setupSystem()"><i class="fa fa-magic"></i> Setup Inicial — Criar Usuários</button>
+      </div>
+    </div>
+    <div class="login-footer">Senha padrão: <code>Vale@2026</code> &nbsp;·&nbsp; Suporte: Administrador</div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ════════════════════════════ -->
+<div id="page-dashboard" class="page">
+  <nav class="topbar">
+    <div class="topbar-brand"><div class="logo-box">⚡</div><div class="brand-text"><span class="brand-name">LTE Sonda Report</span><span class="brand-sub">VALE — PCM v2.2</span></div></div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="Agenda.showActionSheet()"><i class="fa fa-calendar-alt"></i><span class="btn-label"> Agenda</span></button>
+      <button class="btn btn-secondary btn-sm" id="btn-admin-nav" onclick="UI.showPage('page-admin')" style="display:none"><i class="fa fa-cog"></i><span class="btn-label"> Admin</span></button>
+      <div class="user-pill"><div class="ava" id="d-ava">?</div><div class="ava-info"><span class="ava-name" id="d-name">–</span><span class="ava-role" id="d-role">–</span></div></div>
+      <button class="btn btn-secondary btn-sm btn-icon" onclick="Auth.logout()" title="Sair"><i class="fa fa-sign-out-alt"></i></button>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="section-hdr" style="margin-top:8px;">
+      <h2 class="gradient-text"><i class="fa fa-chart-bar"></i> Painel</h2>
+      <div class="btn-row"><button class="btn btn-primary" onclick="Editor.newReport()"><i class="fa fa-plus"></i> Novo Relatório</button></div>
+    </div>
+    <div class="stats-grid" id="stats-grid"><div class="stat-card skeleton"><div class="s-lbl">Carregando...</div></div></div>
+    <div class="section-hdr">
+      <h3 class="section-sub"><i class="fa fa-file-alt"></i> Relatórios</h3>
+      <div class="search-wrap"><i class="fa fa-search search-icon"></i><input class="search-box" type="text" id="search-box" placeholder="Buscar..." oninput="Dashboard.filterReports(this.value)" maxlength="80"></div>
+    </div>
+    <div class="reports-list" id="reports-list"><div class="empty-state"><i class="fa fa-spinner fa-spin"></i><p>Carregando...</p></div></div>
+  </main>
+</div>
+
+<!-- ══ EDITOR ═══════════════════════════════ -->
+<div id="page-editor" class="page">
+  <nav class="topbar">
+    <div class="topbar-brand"><div class="logo-box">✏️</div><div class="brand-text"><span class="brand-name">Editor de Relatório</span><span class="brand-sub" id="editor-sub">Novo</span></div></div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="UI.showPage('page-dashboard')"><i class="fa fa-arrow-left"></i><span class="btn-label"> Voltar</span></button>
+      <button class="btn btn-success btn-sm" onclick="Editor.save()"><i class="fa fa-save"></i><span class="btn-label"> Salvar</span></button>
+      <button class="btn btn-gold btn-sm" onclick="Editor.preview()"><i class="fa fa-eye"></i><span class="btn-label"> Ver</span></button>
+    </div>
+  </nav>
+  <main class="editor-grid">
+    <section class="card" style="margin-top:6px;">
+      <div class="card-title"><i class="fa fa-users"></i> Informações da Equipe</div>
+      <div class="field-row">
+        <div class="fgroup"><label>Equipe / Nomes</label><input id="f-equipe" type="text" placeholder="Ex: Robson e Leno" maxlength="80"></div>
+        <div class="fgroup"><label>Turma</label><input id="f-turma" type="text" placeholder="Ex: C" maxlength="10"></div>
+        <div class="fgroup"><label>Dia / Turno</label><input id="f-dia" type="text" placeholder="Ex: 1-3" maxlength="10"></div>
+        <div class="fgroup"><label>Data</label><input id="f-data" type="date"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="card-title"><i class="fa fa-truck"></i> Checklist Veículos</div>
+      <div class="field-row">
+        <div class="fgroup"><label>Veículo 1</label><input id="v0" type="text" placeholder="TN04" maxlength="20"></div>
+        <div class="fgroup"><label>Veículo 2</label><input id="v1" type="text" placeholder="TN03" maxlength="20"></div>
+        <div class="fgroup"><label>Veículo 3</label><input id="v2" type="text" placeholder="TN31" maxlength="20"></div>
+        <div class="fgroup"><label>Veículo 4</label><input id="v3" type="text" placeholder="Opcional" maxlength="20"></div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span><i class="fa fa-list-ol"></i> Programação PCM (Ordens)</span>
+        <div class="btn-row">
+          <button class="btn btn-secondary btn-sm" onclick="Editor.addOrderRow()"><i class="fa fa-plus"></i> Manual</button>
+          <button class="btn btn-primary btn-sm" onclick="Editor.openOrdensModal()"><i class="fa fa-database"></i> Buscar do Banco</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="ord-table" id="ord-table">
+          <thead><tr><th class="col-n">#</th><th class="col-ord">Nº Ordem</th><th class="col-desc">Descrição</th><th class="col-sta">Status</th><th class="col-del"></th></tr></thead>
+          <tbody id="ord-body"></tbody>
+        </table>
+      </div>
+    </section>
+    <div class="two-col">
+      <section class="card"><div class="card-title"><i class="fa fa-tasks"></i> Outras Atividades</div><div class="num-list" id="out-list"></div></section>
+      <section class="card"><div class="card-title"><i class="fa fa-bolt"></i> REDEL</div><div class="num-list" id="redel-list"></div></section>
+    </div>
+    <section class="card">
+      <div class="card-title"><i class="fa fa-broadcast-tower"></i> Status MW / LTE</div>
+      <div class="three-col">
+        <div><p class="sub-label">📡 Rádios MW</p><div class="num-list" id="mw-list"></div></div>
+        <div><p class="sub-label">📶 Rede LTE</p><div class="num-list" id="lte-list"></div></div>
+        <div><p class="sub-label">🌤️ Clima</p><div class="num-list" id="clima-list"></div></div>
+      </div>
+    </section>
+    <!-- FOTOS -->
+    <section class="photo-gallery-section">
+      <div class="photo-gallery-hdr">
+        <div class="card-title" style="margin-bottom:0;"><i class="fa fa-camera"></i> Fotos do Relatório</div>
+        <button class="btn btn-primary btn-sm" onclick="Upload.openUploadModal()"><i class="fa fa-cloud-upload-alt"></i> Upload</button>
+      </div>
+      <div id="photo-gallery-wrap">
+        <div class="photo-empty-state">
+          <i class="fa fa-camera" style="font-size:32px;color:var(--border);display:block;margin-bottom:10px;"></i>
+          <p style="color:var(--dim);font-size:13px;">Nenhuma foto. Máx. 8 por relatório (PNG, JPG).</p>
+          <button class="btn btn-secondary btn-sm" onclick="Upload.openUploadModal()" style="margin-top:10px;"><i class="fa fa-plus"></i> Adicionar</button>
+        </div>
+      </div>
+    </section>
+    <section class="card card-last">
+      <div class="card-title"><i class="fa fa-comment-dots"></i> Observações Gerais</div>
+      <div class="fgroup"><textarea id="f-obs" rows="3" placeholder="Observações..." maxlength="1000"></textarea></div>
+    </section>
+  </main>
+</div>
+
+<!-- ══ PREVIEW ══════════════════════════════ -->
+<div id="page-preview" class="page">
+  <div class="exp-bar">
+    <button class="btn btn-secondary btn-sm" onclick="UI.showPage('page-editor')"><i class="fa fa-arrow-left"></i><span class="btn-label"> Editar</span></button>
+    <div class="exp-sep"></div>
+    <button class="btn btn-danger btn-sm" onclick="Export.pdf()"><i class="fa fa-file-pdf"></i> PDF</button>
+    <button class="btn btn-success btn-sm" onclick="Export.image()"><i class="fa fa-image"></i> Imagem</button>
+    <button class="btn btn-secondary btn-sm" onclick="Export.text()"><i class="fa fa-align-left"></i> Texto</button>
+    <button class="btn btn-gold btn-sm" onclick="window.print()"><i class="fa fa-print"></i> Imprimir</button>
+  </div>
+  <div id="preview-wrap"></div>
+</div>
+
+<!-- ══ AGENDA ═══════════════════════════════ -->
+<div id="page-agenda" class="page">
+  <nav class="topbar">
+    <div class="topbar-brand"><div class="logo-box">📅</div><div class="brand-text"><span class="brand-name">Agenda</span><span class="brand-sub">Calendário · Escalas · Ausências</span></div></div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="Agenda.showActionSheet()"><i class="fa fa-plus"></i><span class="btn-label"> Novo</span></button>
+      <button class="btn btn-secondary btn-sm" onclick="UI.showPage('page-dashboard')"><i class="fa fa-arrow-left"></i><span class="btn-label"> Painel</span></button>
+    </div>
+  </nav>
+  <div class="agenda-page-wrap">
+    <div class="agenda-nav">
+      <div class="btn-row">
+        <button class="btn btn-secondary btn-sm" onclick="Agenda.prevMonth()"><i class="fa fa-chevron-left"></i></button>
+        <button class="btn btn-secondary btn-sm" onclick="Agenda.goToday()">Hoje</button>
+        <button class="btn btn-secondary btn-sm" onclick="Agenda.nextMonth()"><i class="fa fa-chevron-right"></i></button>
+      </div>
+      <span class="agenda-nav-month" id="agenda-month-label">–</span>
+      <div class="btn-row">
+        <button class="btn btn-secondary btn-sm" onclick="Agenda.openCreateEvent()"><i class="fa fa-calendar-plus"></i> Evento</button>
+        <button class="btn btn-secondary btn-sm" onclick="Agenda.openCreateAusencia()"><i class="fa fa-calendar-times"></i> Ausência</button>
+        <button id="btn-escala-adm" class="btn btn-secondary btn-sm" onclick="Agenda.openCreateEscala()" style="display:none"><i class="fa fa-sync-alt"></i> Escala</button>
+      </div>
+    </div>
+    <!-- Legenda -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 16px;background:var(--card);border:1px solid var(--border2);border-radius:12px;font-size:12px;">
+      <span style="color:var(--dim);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Turmas:</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:11px;height:11px;border-radius:2px;background:#1565C0;display:inline-block;"></span>A</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:11px;height:11px;border-radius:2px;background:#2E7D32;display:inline-block;"></span>B</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:11px;height:11px;border-radius:2px;background:#F57F17;display:inline-block;"></span>C</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:11px;height:11px;border-radius:2px;background:#BF360C;display:inline-block;"></span>D</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:11px;height:11px;border-radius:2px;background:#4527A0;display:inline-block;"></span>ADM</span>
+      <span style="color:var(--dim);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Eventos:</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span class="cal-dot" style="background:#ff1744;"></span>Crítico</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span class="cal-dot" style="background:#ffab00;"></span>Importante</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span class="cal-dot" style="background:#00c6ff;"></span>Moderado</span>
+      <span style="display:flex;align-items:center;gap:4px;">🚫 Ausência</span>
+    </div>
+    <!-- Calendar -->
+    <div class="card" style="padding:14px;"><div id="agenda-cal-wrap"><div class="empty-state"><i class="fa fa-spinner fa-spin"></i><p>Carregando...</p></div></div></div>
+    <!-- Schedule dash -->
+    <div class="card">
+      <div class="card-title"><i class="fa fa-sync-alt"></i> Escala de Trabalho — Próximos 14 dias</div>
+      <div id="sched-dash"></div>
+    </div>
+    <!-- Absence dash -->
+    <div class="card" style="margin-bottom:28px;">
+      <div class="card-title"><i class="fa fa-calendar-times"></i> Ausências Registradas</div>
+      <div id="absence-dash"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN ════════════════════════════════ -->
+<div id="page-admin" class="page">
+  <nav class="topbar">
+    <div class="topbar-brand"><div class="logo-box">⚙️</div><div class="brand-text"><span class="brand-name">Administração</span><span class="brand-sub">Gestão completa</span></div></div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="Agenda.showActionSheet()"><i class="fa fa-calendar-alt"></i></button>
+      <button class="btn btn-secondary btn-sm" onclick="UI.showPage('page-dashboard')"><i class="fa fa-arrow-left"></i><span class="btn-label"> Painel</span></button>
+    </div>
+  </nav>
+  <div class="container">
+    <div style="margin:10px 0 16px;">
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" onclick="UI.showTab('tab-users',this)"><i class="fa fa-users"></i> Usuários</button>
+        <button class="tab-btn" onclick="UI.showTab('tab-prog',this)"><i class="fa fa-file-excel"></i> PCM</button>
+        <button class="tab-btn" onclick="UI.showTab('tab-ordens',this)"><i class="fa fa-list-ol"></i> Ordens</button>
+        <button class="tab-btn" onclick="UI.showTab('tab-allrpts',this)"><i class="fa fa-file-alt"></i> Relatórios</button>
+      </div>
+    </div>
+    <div class="tab-panel active" id="tab-users">
+      <div class="section-hdr"><h2 class="gradient-text">Usuários</h2><button class="btn btn-primary btn-sm" onclick="Admin.openAddUser()"><i class="fa fa-user-plus"></i> Adicionar</button></div>
+      <div class="user-list-wrap" id="users-list"><div class="empty-state"><i class="fa fa-spinner fa-spin"></i><p>Carregando...</p></div></div>
+    </div>
+    <div class="tab-panel" id="tab-prog">
+      <div class="section-hdr"><h2 class="gradient-text">Programações PCM</h2></div>
+      <section class="card" style="margin-bottom:18px;">
+        <div class="card-title"><i class="fa fa-cloud-upload-alt"></i> Upload Nova Programação</div>
+        <div class="field-row two-col-fixed">
+          <div class="fgroup"><label>Semana / Período</label><input id="prog-semana" type="text" placeholder="Semana 18 / 2026" maxlength="40"></div>
+          <div class="fgroup"><label>Equipe</label><input id="prog-equipe" type="text" placeholder="TNTAX31T" maxlength="40"></div>
+        </div>
+        <label class="prog-upload-zone">
+          <i class="fa fa-file-excel"></i>
+          <p class="upload-title">Clique ou arraste o arquivo Excel PCM</p>
+          <p class="upload-sub">Formato .xlsx — Programação semanal Vale</p>
+          <input type="file" id="prog-file" accept=".xlsx,.xls" style="display:none" onchange="Admin.uploadProg(this)">
+        </label>
+      </section>
+      <div class="prog-list" id="prog-list"><div class="empty-state"><i class="fa fa-file-excel"></i><p>Nenhuma programação.</p></div></div>
+    </div>
+    <div class="tab-panel" id="tab-ordens">
+      <div class="section-hdr"><h2 class="gradient-text">Ordens no Banco</h2>
+        <div class="search-wrap"><i class="fa fa-search search-icon"></i><input class="search-box" type="text" id="ord-search" placeholder="Filtrar..." oninput="Admin.renderOrdens(this.value)" maxlength="80"></div>
+      </div>
+      <div id="ordens-list"><div class="empty-state"><i class="fa fa-list-ol"></i><p>Clique na aba.</p></div></div>
+    </div>
+    <div class="tab-panel" id="tab-allrpts">
+      <div class="section-hdr"><h2 class="gradient-text">Todos os Relatórios</h2></div>
+      <div class="reports-list" id="admin-rpts"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal-bg" role="dialog" aria-modal="true" onclick="if(event.target===this)UI.closeModal()">
+  <div id="modal-body" class="modal"></div>
+</div>
+<div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+<div class="loader" id="loader" role="status"><div class="loader-ring"></div><p id="loader-msg">Processando...</p></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="js/firebase-mock.js"></script>
+<script src="js/config.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/export.js"></script>
+<script src="js/agenda.js"></script>
+<script src="js/upload.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
